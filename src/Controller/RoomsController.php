@@ -2,7 +2,6 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
-use Cake\I18n\Time;
 
 /**
  * Rooms Controller
@@ -21,11 +20,9 @@ class RoomsController extends AppController
     public function index()
     {
         $rooms = $this->paginate($this->Rooms);
-        
-        $this->set('rooms', $this->paginate($this->Rooms));  
 
-/*        $this->set(compact('rooms'));
-        $this->set('_serialize', ['rooms']);*/
+        $this->set(compact('rooms'));
+        $this->set('_serialize', ['rooms']);
     }
 
     /**
@@ -40,26 +37,15 @@ class RoomsController extends AppController
         $room = $this->Rooms->get($id, [
             'contain' => []
         ]);
-        
-        
-        $dateDebut =new Time('Monday this week');
-        $dateFin = new Time('Sunday this week');
-           
-        
-        $showtimes = $this->Rooms->Showtimes->find()->where(['room_id =' => $id, 'start >=' => $dateDebut, 'end <=' => $dateFin])->contain(['Rooms','Movies']);
-        
-        $calendrier =  array();
-        foreach ($showtimes as $showtime){
-            if($showtime->start->format('N') == 0)
-                $calendrier[6][] = $showtime;
-            else
-                $calendrier[$showtime->start->format('N')-1][] = $showtime;
-        }
-        
-        $this->set('calendrier', $calendrier);
-        $this->set('showtimes', $showtimes);
+        $showtime = $this->Rooms->Showtimes->find()->contain(['Movies','Rooms'])
+        ->where(['room_id'=>$id])
+        ->where(['start >='=>new \DateTime('monday this week')])
+        ->where(['start <'=>new \DateTime('monday next week')]);
+
         $this->set('room', $room);
         $this->set('_serialize', ['room']);
+        $this->set('showtimes', $showtime);
+       
     }
 
     /**
